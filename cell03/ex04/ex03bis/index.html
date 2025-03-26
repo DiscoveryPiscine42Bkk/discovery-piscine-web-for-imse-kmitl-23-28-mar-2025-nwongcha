@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script
+        src="https://code.jquery.com/jquery-3.6.1.min.js"
+        integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+        crossorigin="anonymous"
+    ></script>
+</head>
+<style>
+    #ft_list > div {
+        margin: 10px;
+        background-color: #f47721;
+        padding: 10px;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    #ft_list > div:hover {
+        background-color: #fab281;
+    }
+</style>
+<body>
+    <div style="width: 100%; text-align: center">
+        <h1>TODO LIST</h1>
+        <div
+            style="margin-left: auto; margin-right: auto; padding: 10px"
+            id="ft_list"
+        ></div>
+        <button id="create">NEW</button>
+    </div>
+</body>
+<script>
+    $(document).ready(() => {
+        const pageIdentifier = window.location.pathname;
+        const cookieKeyPrefix = `todoList_${pageIdentifier}_`;
+        let ft_list = $("#ft_list");
+
+        function getCookie(name) {
+            const decodedCookie = decodeURIComponent(document.cookie);
+            const ca = decodedCookie.split(';');
+            for(let i = 0; i <ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name + "=") === 0) {
+                    return c.substring(name.length + 1, c.length);
+                }
+            }
+            return "";
+        }
+
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + encodeURIComponent(value) + expires + "; path=/";
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        }
+
+        function loadTodoList() {
+            const decodedCookie = document.cookie;
+            const ca = decodedCookie.split(';');
+            ca.forEach(element => {
+                let c = element.trim();
+                if (c.startsWith(cookieKeyPrefix)) {
+                    const parts = c.split('=');
+                    if (parts.length >= 2) {
+                        const cookieName = parts[0];
+                        const todoTextEncoded = parts.slice(1).join('=');
+                        const todoText = decodeURIComponent(todoTextEncoded);
+                        if (todoText) {
+                            let list = $("<div></div>").html(todoText);
+                            list.click(() => {
+                                const check = confirm("Do you want to delete");
+                                if (check) {
+                                    list.remove();
+                                    deleteCookie(cookieName);
+                                }
+                            });
+                            ft_list.prepend(list);
+                        }
+                    }
+                }
+            });
+        }
+
+        $("#create").click(() => {
+            let txt = prompt("Please Enter TODO LIST :");
+            if (txt) {
+                const timestamp = new Date().getTime();
+                const cookieName = cookieKeyPrefix + timestamp;
+                setCookie(cookieName, txt, 30);
+
+                let list = $("<div></div>").html(txt);
+                list.click(() => {
+                    const check = confirm("Do you want to delete");
+                    if (check) {
+                        list.remove();
+                        deleteCookie(cookieName);
+                    }
+                });
+                ft_list.prepend(list);
+            }
+        });
+
+        loadTodoList();
+    });
+</script>
+</html>
